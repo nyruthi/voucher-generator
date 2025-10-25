@@ -40,37 +40,54 @@ def redeem_voucher():
     if request.method == 'POST':
         code = request.form.get('code', '').strip().upper()
 
-        # Basic format validation: e.g. HYD-2510-ABCD
         import re
+        # Validate format like HYD-2510-7K9Q (3–4 letters, dash, YYMM, dash, 4 alphanumeric)
         if not re.match(r'^[A-Z]{3,4}-\d{4}-[A-Z0-9]{4}$', code):
-            return jsonify({"status": "error", "message": "Invalid voucher format"})
+            return jsonify({
+                "status": "error",
+                "message": "Invalid voucher format. Use format: ABC-YYMM-XXXX"
+            })
 
+        # Open DB connection
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
-        c.execute("SELECT id, redeemed, created_at FROM vouchers WHERE code = ?", (code,))
-        row = c.fetchone()
+        c.execute("SELECT id, name, redeemed, redeemed_at FROM vouchers WHERE code = ?", (code,))
+        record = c.fetchone()
 
-        if not row:
+        if not record:
             conn.close()
-            return jsonify({"status": "error", "message": "Voucher code not found"})
+            return jsonify({
+                "status": "error",
+                "message": "Voucher code not found in system."
+            })
 
-        if row[1] == 1:
+        voucher_id, name, redeemed, redeemed_at = record
+
+        if redeemed == 1:
             conn.close()
-            return jsonify({"status": "error", "message": "Voucher already redeemed"})
+            return jsonify({
+                "status": "error",
+                "message": f"Voucher already redeemed on {redeemed_at}"
+            })
 
+        # Mark as redeemed
         redeemed_at = datetime.datetime.now().isoformat()
-        c.execute("UPDATE vouchers SET redeemed = 1, redeemed_at = ? WHERE id = ?", (redeemed_at, row[0]))
+        c.execute(
+            "UPDATE vouchers SET redeemed = 1, redeemed_at = ? WHERE id = ?",
+            (redeemed_at, voucher_id)
+        )
         conn.commit()
         conn.close()
 
         return jsonify({
             "status": "success",
-            "message": "Voucher redeemed successfully",
+            "message": f"Voucher redeemed successfully for {name}",
             "code": code,
             "redeemed_at": redeemed_at
         })
 
     return render_template('redeem_voucher_basic_html.html')
+
 
 
 @app.route('/issue', methods=['GET', 'POST'])
