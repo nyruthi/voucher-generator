@@ -97,14 +97,27 @@
       });
       const data = await res.json();
       resultBox.style.display = 'block';
+
       if (data.status === 'success') {
-        resultBox.textContent =
-          `Voucher Created ✅\n` +
-          `Name: ${data.name}\n` +
-          `Mobile: ${data.mobile}\n` +
-          `Outlet: ${data.outlet}\n` +
-          `Code: ${data.code}\n` +
-          `Created: ${new Date().toLocaleString()}`;
+        // For this example, we’ll assume discount is a random 10–40%
+        const discount = Math.floor(Math.random() * 4) * 10 + 10;
+
+        // 1️⃣ Display voucher text info
+        let html = `
+          <b>Voucher Created ✅</b><br>
+          Name: ${data.name}<br>
+          Mobile: ${data.mobile}<br>
+          Outlet: ${data.outlet}<br>
+          Code: ${data.code}<br>
+          Created: ${new Date().toLocaleString()}<br><br>
+          <b>Discount:</b> ${discount}% OFF<br><br>
+        `;
+
+        // 2️⃣ Add voucher image below
+        const imgURL = \`/voucher_image/${data.code}/${discount}\`;
+        html += \`<img src="\${imgURL}" alt="Voucher" style="max-width:100%;border-radius:12px;border:1px solid #1f2937;">\`;
+
+        resultBox.innerHTML = html;
       } else {
         resultBox.textContent = '❌ ' + data.message;
       }
@@ -113,7 +126,7 @@
       resultBox.textContent = '❌ Error connecting to server. Please try again.';
     }
   });
+</script>
 
-  </script>
 </body>
 </html>
