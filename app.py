@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import sqlite3, os, datetime, random, string
-
+from io import BytesIO
+from PIL import Image, ImageDraw, ImageFont
+from flask import send_file
 app = Flask(__name__, template_folder='templates')
 
 DB_PATH = "voucher.db"
@@ -33,6 +35,44 @@ def generate_code(prefix):
 def home():
     return render_template('voucher_console_basic_html.html')
 
+@app.route('/redeem', methods=['GET', 'POST'])
+def redeem_voucher():
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip().upper()
+
+        # Basic format validation: e.g. HYD-2510-ABCD
+        import re
+        if not re.match(r'^[A-Z]{3,4}-\d{4}-[A-Z0-9]{4}$', code):
+            return jsonify({"status": "error", "message": "Invalid voucher format"})
+
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT id, redeemed, created_at FROM vouchers WHERE code = ?", (code,))
+        row = c.fetchone()
+
+        if not row:
+            conn.close()
+            return jsonify({"status": "error", "message": "Voucher code not found"})
+
+        if row[1] == 1:
+            conn.close()
+            return jsonify({"status": "error", "message": "Voucher already redeemed"})
+
+        redeemed_at = datetime.datetime.now().isoformat()
+        c.execute("UPDATE vouchers SET redeemed = 1, redeemed_at = ? WHERE id = ?", (redeemed_at, row[0]))
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "status": "success",
+            "message": "Voucher redeemed successfully",
+            "code": code,
+            "redeemed_at": redeemed_at
+        })
+
+    return render_template('redeem_voucher_basic_html.html')
+
+
 @app.route('/issue', methods=['GET', 'POST'])
 def issue_voucher():
     if request.method == 'POST':
@@ -60,31 +100,40 @@ def issue_voucher():
         })
     return render_template('issue_voucher_customer_form_basic_html.html')
 
-@app.route('/redeem', methods=['GET', 'POST'])
-def redeem_voucher():
-    if request.method == 'POST':
-        code = request.form.get('code').strip().upper()
 
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("SELECT id, redeemed FROM vouchers WHERE code = ?", (code,))
-        row = c.fetchone()
 
-        if not row:
-            conn.close()
-            return jsonify({"status": "error", "message": "Invalid voucher code"})
+@app.route('/voucher_image/<code>/<discount>')
+def voucher_image(code, discount):
+    # Create base image
+    img = Image.new("RGB", (600, 300), color="#f9fafb")
+    draw = ImageDraw.Draw(img)
 
-        if row[1] == 1:
-            conn.close()
-            return jsonify({"status": "error", "message": "Voucher already redeemed"})
+    # Load fonts (use default if no font files)
+    try:
+        font_title = ImageFont.truetype("arialbd.ttf", 40)
+        font_sub = ImageFont.truetype("arial.ttf", 24)
+        font_code = ImageFont.truetype("arialbd.ttf", 28)
+    except:
+        font_title = font_sub = font_code = ImageFont.load_default()
 
-        redeemed_at = datetime.datetime.now().isoformat()
-        c.execute("UPDATE vouchers SET redeemed = 1, redeemed_at = ? WHERE id = ?", (redeemed_at, row[0]))
-        conn.commit()
-        conn.close()
-        return jsonify({"status": "success", "message": "Voucher redeemed", "code": code, "redeemed_at": redeemed_at})
+    # Header
+    draw.text((30, 30), "Naturals", fill="#8b5cf6", font=font_title)
 
-    return render_template('redeem_voucher_basic_html.html')
+    # Discount text
+    draw.text((30, 100), f"Enjoy {discount}% OFF on your next visit!", fill="#111827", font=font_sub)
+
+    # Voucher code
+    draw.text((30, 170), f"Voucher Code: {code}", fill="#2563eb", font=font_code)
+
+    # Footer
+    draw.text((30, 240), "Valid at participating outlets only", fill="#6b7280", font=font_sub)
+
+    # Output as PNG
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return send_file(buf, mimetype="image/png")
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
