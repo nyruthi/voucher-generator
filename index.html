@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voucher Manager</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="p-4">
+    <h2>Voucher Management</h2>
+
+    <form action="/create" method="POST" class="mb-3">
+        <input name="issued_to" placeholder="Issued to" required>
+        <input type="date" name="expiry_date" required>
+        <button class="btn btn-primary">Generate Voucher</button>
+    </form>
+
+    <table class="table table-bordered">
+        <thead><tr><th>Code</th><th>Issued To</th><th>Status</th><th>Expiry</th><th>Action</th></tr></thead>
+        <tbody>
+            {% for v in vouchers %}
+            <tr>
+                <td>{{ v[1] }}</td>
+                <td>{{ v[2] }}</td>
+                <td>{{ v[3] }}</td>
+                <td>{{ v[4] }}</td>
+                <td>
+                    {% if v[3] == "Active" %}
+                        <a href="/redeem/{{ v[1] }}" class="btn btn-success btn-sm">Redeem</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
