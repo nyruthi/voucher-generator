@@ -1,213 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Voucher Console</title>
-  <style>
-    :root {
-      --bg: #0f172a;        /* slate-900 */
-      --card: #111827;      /* gray-900 */
-      --muted: #94a3b8;     /* slate-400 */
-      --text: #e5e7eb;      /* gray-200 */
-      --accent: #22c55e;    /* green-500 */
-      --accent-2: #3b82f6;  /* blue-500 */
-      --ring: rgba(59,130,246,.35);
-      --border: #1f2937;    /* gray-800 */
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 800px at 80% -10%, #1f2937 0, transparent 60%),
-                  radial-gradient(1000px 600px at -10% 110%, #1f2937 0, transparent 60%),
-                  var(--bg);
-      color: var(--text);
-      min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto;
-    }
-    header { padding: 28px 20px; text-align: center; }
-    .brand { font-size: clamp(22px, 2.2vw, 28px); font-weight: 700; letter-spacing: .3px; }
-    .sub { color: var(--muted); margin-top: 6px; font-size: 14px; }
-
-    main { width: min(1024px, 92vw); margin: 0 auto; padding: 10px 0 40px; }
-    .grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 22px;
-    }
-    .tile {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      background: linear-gradient(180deg, #0b1220, #0a0f1a); color: var(--text); text-decoration: none;
-      padding: 18px 18px; border-radius: 16px; border: 1px solid var(--border);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 10px 24px rgba(0,0,0,.35);
-      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    }
-    .tile:hover { transform: translateY(-2px); border-color: #2a364a; box-shadow: 0 16px 32px rgba(0,0,0,.4); }
-    .tile .left { display: flex; align-items: center; gap: 12px; }
-    .tile .emoji {
-      font-size: 24px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px;
-      background: rgba(34,197,94,.1);
-    }
-    .tile.issue .emoji { background: rgba(34,197,94,.12); }
-    .tile.redeem .emoji { background: rgba(59,130,246,.12); }
-    .tile .title { font-weight: 600; }
-    .tile .desc { color: var(--muted); font-size: 12.5px; }
-
-    .panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
-    .panel.active { display: block; }
-
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .field { display: grid; gap: 6px; margin-bottom: 12px; }
-    label { font-size: 12px; color: var(--muted); }
-    input, select { width: 100%; background: #0a0f1a; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; outline: none; }
-    input:focus, select:focus { border-color: var(--accent-2); box-shadow: 0 0 0 4px var(--ring); }
-
-    .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
-    .btn { cursor: pointer; border: 1px solid var(--border); background: #0b1220; color: var(--text); padding: 10px 14px; border-radius: 12px; font-weight: 600; }
-    .btn.primary { background: linear-gradient(180deg, #22c55e, #16a34a); border-color: rgba(34,197,94,.6); color: #06220f; }
-    .btn.alt { background: linear-gradient(180deg, #3b82f6, #2563eb); border-color: rgba(59,130,246,.6); color: #08152e; }
-
-    .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
-    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="brand">Voucher Console</div>
-    <div class="sub">Issue or redeem vouchers in two clicks</div>
-  </header>
-
-  <main>
-    <!-- Quick options -->
-    <nav class="grid">
-      <a href="#issue" class="tile issue" aria-label="Issue Voucher">
-        <div class="left">
-          <div class="emoji">🎟️</div>
-          <div>
-            <div class="title">Issue Voucher</div>
-            <div class="desc">Create a new discount voucher</div>
-          </div>
-        </div>
-        <span>→</span>
-      </a>
-
-      <a href="#redeem" class="tile redeem" aria-label="Redeem Voucher">
-        <div class="left">
-          <div class="emoji">✅</div>
-          <div>
-            <div class="title">Redeem Voucher</div>
-            <div class="desc">Validate & apply a voucher</div>
-          </div>
-        </div>
-        <span>→</span>
-      </a>
-    </nav>
-
-    <!-- Issue panel -->
-    <section id="issue" class="panel" aria-labelledby="issue-heading">
-      <h2 id="issue-heading" style="margin-top:0">Issue Voucher</h2>
-      <div class="row">
-        <div class="field">
-          <label for="custName">Customer Name</label>
-          <input id="custName" placeholder="e.g., Rakesh Reddy" />
-        </div>
-        <div class="field">
-          <label for="mobile">Mobile Number</label>
-          <input id="mobile" type="tel" placeholder="e.g., 98765 43210" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label for="voucherType">Discount Type</label>
-          <select id="voucherType">
-            <option value="percent">Percent (%)</option>
-            <option value="flat">Flat (₹)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="value">Value</label>
-          <input id="value" type="number" placeholder="e.g., 30 for 30% or 300" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label for="expiry">Expiry Date</label>
-          <input id="expiry" type="date" />
-        </div>
-        <div class="field">
-          <label for="notes">Reference (Optional)</label>
-          <input id="notes" placeholder="Campaign / staff / remarks" />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn" type="button" id="resetIssue">Reset</button>
-        <button class="btn primary" type="button" id="generateBtn">Generate Voucher</button>
-      </div>
-      <div class="note">This is a basic front‑end mockup. Hook the Generate button to your backend to actually create & store vouchers.</div>
-    </section>
-
-    <!-- Redeem panel -->
-    <section id="redeem" class="panel" aria-labelledby="redeem-heading">
-      <h2 id="redeem-heading" style="margin-top:0">Redeem Voucher</h2>
-      <div class="row">
-        <div class="field">
-          <label for="code">Voucher Code</label>
-          <input id="code" placeholder="Enter code (e.g., ARNY-30-7K9Q)" />
-        </div>
-        <div class="field">
-          <label for="bill">Bill Amount (₹)</label>
-          <input id="bill" type="number" placeholder="e.g., 1250" />
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn alt" type="button" id="validateBtn">Validate & Apply</button>
-      </div>
-      <div class="note">Connect this to your API to verify code, compute discount, and mark as redeemed.</div>
-    </section>
-  </main>
-
-  <footer>
-    © <span id="year"></span> Voucher Console • Made for speed
-  </footer>
-
-  <script>
-    // Simple router for hash panels
-    const panels = {
-      issue: document.getElementById('issue'),
-      redeem: document.getElementById('redeem')
-    };
-    function setPanel() {
-      const target = location.hash.replace('#','') || 'issue';
-      Object.values(panels).forEach(p => p.classList.remove('active'));
-      (panels[target] || panels.issue).classList.add('active');
-    }
-    window.addEventListener('hashchange', setPanel);
-    setPanel();
-
-    // Footer year
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Demo actions (mock only)
-    document.getElementById('generateBtn').addEventListener('click', () => {
-      const name = document.getElementById('custName').value.trim() || 'Customer';
-      const type = document.getElementById('voucherType').value;
-      const val  = document.getElementById('value').value.trim();
-      if (!val) return alert('Please enter a discount value.');
-      const code = 'ARNY-' + (type === 'percent' ? val + 'P' : 'FLAT') + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
-      alert(`Voucher created for ${name}:\nCode: ${code}`);
-    });
-    document.getElementById('resetIssue').addEventListener('click', () => {
-      ['custName','mobile','value','expiry','notes'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('voucherType').value = 'percent';
-    });
-    document.getElementById('validateBtn').addEventListener('click', () => {
-      const code = document.getElementById('code').value.trim();
-      const bill = parseFloat(document.getElementById('bill').value || '0');
-      if (!code) return alert('Enter a voucher code.');
-      if (!bill) return alert('Enter bill amount.');
-      // Fake: treat codes ending with P as percent 30%, else flat 300
-      const isPercent = /P$/.test(code);
-      const discount = isPercent ? bill * 0.30 : 300;
-      const payable = Math.max(0, bill - discount);
-      alert(`Code valid!\nDiscount: ₹${discount.toFixed(2)}\nPayable: ₹${payable.toFixed(2)}`);
-    });
-  </script>
-</body>
+<!DOCTYPE html> <html lang="en">
+  <head>
+    <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" /> <title>Voucher Console</title> <style>
+                                                                                                                                     body {
+                                                                                                                                       margin: 0;
+                                                                                                                                       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+                                                                                                                                       background: #0f172a;
+                                                                                                                                       color: #e5e7eb;
+                                                                                                                                       display: grid;
+                                                                                                                                       place-items: center;
+                                                                                                                                       min-height: 100vh;
+                                                                                                                                     }
+                                                                                                                                     .container {
+                                                                                                                                       width: min(600px, 90vw);
+                                                                                                                                       text-align: center;
+                                                                                                                                       padding: 40px;
+                                                                                                                                     }
+                                                                                                                                     h1 {
+                                                                                                                                       margin-bottom: 10px;
+                                                                                                                                     }
+                                                                                                                                     a.button {
+                                                                                                                                       display: block;
+                                                                                                                                       margin: 15px auto;
+                                                                                                                                       padding: 14px 20px;
+                                                                                                                                       border-radius: 12px;
+                                                                                                                                       text-decoration: none;
+                                                                                                                                       color: #fff;
+                                                                                                                                       font-weight: 600;
+                                                                                                                                     }
+                                                                                                                                     .issue {
+                                                                                                                                       background: linear-gradient(180deg, #22c55e, #16a34a);
+                                                                                                                                     }
+                                                                                                                                     .redeem {
+                                                                                                                                       background: linear-gradient(180deg, #3b82f6, #2563eb);
+                                                                                                                                     }
+                                                                                                                                   </style>
+  </head> <body>
+    <div class="container">
+      <h1>Voucher Console 🎟️</h1> <p>Issue or redeem vouchers</p> <a class="button issue" href="/issue">Issue Voucher</a> <a class="button redeem" href="/redeem">Redeem Voucher</a>
+    </div>
+  </body>
 </html>
