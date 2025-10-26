@@ -6,4 +6,3 @@ qrcode==7.4.2
 gunicorn==22.0.0
 python-dotenv==1.0.1
 oauth2client==4.1.3
-imagefont==1.0.3
