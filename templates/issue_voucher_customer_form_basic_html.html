@@ -25,16 +25,11 @@
   </div>
   <div class="field">
     <label for="outlet">Outlet</label>
-    <select id="outlet" name="outlet" required>
-      <option value="" disabled selected>Select outlet</option>
-            <option value="HYD-Padmaraonagar">Hyderabad – Padmaraonagar</option>
-            <option value="HYD-WestMarredpally">Hyderabad – West Marredpally</option>
-            <option value="HYD-Nagole">Hyderabad – Nagole</option>
-            <option value="HYD-Chandanagar">Hyderabad – Chandanagar</option>
-            <option value="HYD-Madinaguda">Hyderabad – Madinaguda</option>
-            <option value="WRLG-Aranyam">Warangal – Aranyam</option>
-            <option value="KRMN-Aranyam">Karimnagar – Aranyam</option>
-    </select>
+    
+     <select id="outlet" name="outlet" readonly>
+  <option value="{{ outlet }}">{{ outlet }}</option>
+</select>
+
   </div>
   <div class="actions">
     <button type="submit" class="btn primary">Generate Voucher</button>
