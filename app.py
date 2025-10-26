@@ -7,6 +7,7 @@ app = Flask(__name__, template_folder='templates')
 # Google Sheets setup
 from google.oauth2.service_account import Credentials
 
+
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 CREDS = Credentials.from_service_account_file(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"), scopes=SCOPE)
 CLIENT = gspread.authorize(CREDS)
@@ -112,6 +113,7 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from flask import send_file
 import qrcode
+import os
 
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
@@ -128,8 +130,9 @@ def generate_voucher_image(code: str, discount: int, partner_name: str, validity
 
     # Fonts
     try:
-        font_name = ImageFont.truetype("arialbd.ttf", 95)   # large customer name
-        font_value = ImageFont.truetype("arialbd.ttf", 33)
+        font_path = os.path.join(os.path.dirname(__file__), "fonts", "arialbd.ttf")
+        font_name = ImageFont.truetype(font_path, 95)
+        font_value = ImageFont.truetype(font_path, 33)
     except:
         font_name = font_value = ImageFont.load_default()
 
