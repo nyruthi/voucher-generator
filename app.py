@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import gspread, datetime, random, string, os
-from oauth2client.service_account import ServiceAccountCredentials
-import ast
 app = Flask(__name__, template_folder='templates')
 
 # Google Sheets setup
@@ -9,7 +7,8 @@ from google.oauth2.service_account import Credentials
 
 
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-CREDS = Credentials.from_service_account_file(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"), scopes=SCOPE)
+cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "service_account.json")
+CREDS = Credentials.from_service_account_file(cred_path, scopes=SCOPE)
 CLIENT = gspread.authorize(CREDS)
 SHEET = CLIENT.open_by_key("1V0daaI3OgxJJ5lifrGeYbTH3qrG1AO_LX0Q6J7JR5C4").sheet1
 app.secret_key = "super_secret_key"  # change this to a random string
@@ -56,7 +55,7 @@ def issue():
         name = request.form.get('name')
         mobile = request.form.get('mobile')
         outlet = request.form.get('outlet')
-        discount = request.form.get('discount')
+        bill = request.form.get('bill')
 
         if not name or not mobile or not outlet:
             return jsonify({"status": "error", "message": "Missing fields"})
@@ -64,7 +63,7 @@ def issue():
         code = generate_code(outlet.split('-')[0])
         created_at = datetime.datetime.now().isoformat()
 
-        SHEET.append_row([name, mobile, outlet, code, created_at, "No", "",discount])
+        SHEET.append_row([name, mobile, outlet, code, created_at, "No", "",bill])
 
         return jsonify({
             "status": "success",
@@ -72,7 +71,7 @@ def issue():
             "name": name,
             "mobile": mobile,
             "outlet": outlet,
-            "discount": discount,
+            "bill": bill,
             "redirect_url": f"/issued/{code}"
         })
 
@@ -81,6 +80,7 @@ def issue():
 
 
 @app.route("/redeem", methods=["GET", "POST"])
+@login_required
 def redeem():
     if request.method == "GET":
         return render_template("redeem_voucher_basic_html.html")
@@ -120,8 +120,8 @@ from PIL import Image, ImageDraw, ImageFont
 from flask import send_file
 import datetime, qrcode, os
 
-@app.route('/voucher_download/<code>/<discount>/<partner_name>/234')
-def generate_voucher_image(code: str, discount: int, partner_name: str, validity_days: int = 30) -> BytesIO:
+@app.route('/voucher_download/<code>/<outlet>/<partner_name>/234')
+def generate_voucher_image(code: str, outlet: str, partner_name: str, validity_days: int = 30) -> BytesIO:
     """Generate voucher image using Canva template with perfect text placement."""
     template_path = os.path.join("static", "voucher_template.jpeg")  # your Canva base
     img = Image.open(template_path).convert("RGB")
@@ -148,6 +148,7 @@ def generate_voucher_image(code: str, discount: int, partner_name: str, validity
     # --- 2️⃣ Voucher details (aligned beside labels) ---
     # Adjusted coordinates for Canva template (1366×768 approx)
     details_color = (0, 0, 0)
+    draw.text((30, 170), outlet, font=font_value, fill=details_color)  # partner name
     draw.text((960, 585), partner_name, font=font_value, fill=details_color)  # partner name
     draw.text((920, 660), code, font=font_value, fill=details_color)          # voucher id
     draw.text((860, 735), validity_date, font=font_value, fill=details_color) # validity
@@ -164,25 +165,35 @@ def generate_voucher_image(code: str, discount: int, partner_name: str, validity
     as_attachment=True,          # ✅ This makes it download
     download_name=f"{code}.jpg"  # Sets the filename
     )
+    
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
 
-        user = get_user_from_sheet(username)
+        try:
+            user = get_user_from_sheet(username)
+        except Exception as e:
+            print("Error reading user:", e)
+            return render_template("login.html", error="Unable to read user data")
+
         if not user:
+            # User not found
             return render_template("login.html", error="User not found")
 
-        if str(user["Password"]).strip() != password.strip():
+        stored_password = str(user.get("Password", "")).strip()
+        if stored_password != password:
+            # Wrong password
             return render_template("login.html", error="Invalid password")
 
-        # ✅ store user info in session
+        # Successful login
         session["username"] = user["Username"]
         session["outlet"] = user["Outlet"]
         session["role"] = user.get("Role", "staff")
 
-        return redirect(url_for("index"))  # or /issue if that’s your main page
+        return redirect(url_for("issue"))
+
     return render_template("login.html")
 
 

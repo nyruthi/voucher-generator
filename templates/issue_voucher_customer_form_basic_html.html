@@ -20,8 +20,8 @@
     <input id="mobile" name="mobile" required />
   </div>
   <div class="field">
-    <label for="mobile">Discount %</label>
-    <input id="discount" name="discount" required />
+    <label for="mobile">Bill Number</label>
+    <input id="bill" name="bill" required />
   </div>
   <div class="field">
     <label for="outlet">Outlet</label>
@@ -63,9 +63,9 @@ form.addEventListener('submit', async (e) => {
     resultBox.style.display = 'block';
 
     if (data.status === 'success') {
-      const discount = data.discount;
+      const bill = data.bill;
       const outlet = data.outlet;
-      const downloadURL = `/voucher_download/${data.code}/${discount}/${data.name}/234`;
+      const downloadURL = `/voucher_download/${data.code}/${outlet}/${data.name}/234`;
       resultBox.innerHTML = `
         <b>Voucher Created ✅</b><br>
         Code: ${data.code}<br>
