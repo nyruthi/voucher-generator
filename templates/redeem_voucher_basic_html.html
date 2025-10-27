@@ -1,2 +1,44 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" /> <title>Redeem Voucher</title> <style> body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#0f172a;color:#e5e7eb;display:grid;place-items:center;min-height:100vh;padding:24px;} .card{width:min(460px,92vw);background:#0b1220;border:1px solid #1f2937;border-radius:16px;padding:20px;box-shadow:0 12px 28px rgba(0,0,0,.45);} h1{margin:0 0 6px;} p.sub{margin:0 0 18px;color:#94a3b8;font-size:13px;} .field{display:grid;gap:6px;margin-bottom:12px;} label{font-size:12px;color:#94a3b8;} input{width:100%;background:#081224;color:#e5e7eb;border:1px solid #1f2937;border-radius:12px;padding:12px;outline:none;} input:focus{border-color:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,.35);} .actions{display:flex;gap:10px;justify-content:flex-end;} .btn{cursor:pointer;border:none;padding:12px 16px;border-radius:12px;font-weight:700;} .btn.primary{background:linear-gradient(180deg,#3b82f6,#2563eb);color:#08152e;} .result{margin-top:14px;background:#07101f;border:1px dashed #1f2a3d;padding:12px;border-radius:12px;display:none;white-space:pre-wrap;} .error{color:#ef4444;font-weight:bold;} </style> </head> <body> <div class="card"> <h1>Redeem Voucher</h1> <p class="sub">Enter issued voucher code to redeem</p> <form id="redeemForm" autocomplete="off"> <div class="field"> <label for="code">Voucher Code</label> <input id="code" name="code" placeholder="e.g., HYD-2510-7K9Q" required /> 
-<label for="Redeembill">Redeemed Bill Ref</label> <input id="Redeembill" name="Redeembill"  /></div> <div class="actions"> <button class="btn" type="reset">Reset</button> <button class="btn primary" type="submit">Redeem</button> </div> <div id="result" class="result"></div> </form> </div> <script> const form=document.getElementById('redeemForm'); const result=document.getElementById('result'); form.addEventListener('submit',async e=>{ e.preventDefault(); const code=document.getElementById('code').value.trim(); if(!code){ result.style.display='block'; result.innerHTML="<span class='error'>Enter a voucher code.</span>"; return; } try{ const fd=new FormData(); fd.append('code',code); const res=await fetch('/redeem',{method:'POST',body:fd}); const data=await res.json(); result.style.display='block'; if(data.status==='success'){ result.textContent=`Voucher Redeemed ✅\nCode: ${data.code}\n${data.message}`; }else{ result.innerHTML=`<span class='error'>❌ ${data.message}</span>`; } }catch(err){ result.style.display='block'; result.innerHTML="<span class='error'>❌ Server error. Try again.</span>"; } }); </script> </body> </html>
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" /> <title>Redeem Voucher</title> <style> body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#0f172a;color:#e5e7eb;display:grid;place-items:center;min-height:100vh;padding:24px;} .card{width:min(460px,92vw);background:#0b1220;border:1px solid #1f2937;border-radius:16px;padding:20px;box-shadow:0 12px 28px rgba(0,0,0,.45);} h1{margin:0 0 6px;} p.sub{margin:0 0 18px;color:#94a3b8;font-size:13px;} .field{display:grid;gap:6px;margin-bottom:12px;} label{font-size:12px;color:#94a3b8;} input{width:100%;background:#081224;color:#e5e7eb;border:1px solid #1f2937;border-radius:12px;padding:12px;outline:none;} input:focus{border-color:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,.35);} .actions{display:flex;gap:10px;justify-content:flex-end;} .btn{cursor:pointer;border:none;padding:12px 16px;border-radius:12px;font-weight:700;} .btn.primary{background:linear-gradient(180deg,#3b82f6,#2563eb);color:#08152e;} .result{margin-top:14px;background:#07101f;border:1px dashed #1f2a3d;padding:12px;border-radius:12px;display:none;white-space:pre-wrap;} .error{color:#ef4444;font-weight:bold;} </style> 
+<style>
+.back-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #6c63ff;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.back-btn:hover {
+  background: #574fd6;
+}
+</style></head> <body> <div class="card"> <div style="margin-bottom: 15px;">
+    <a href="{{ url_for('index') }}" 
+       style="display: inline-block; padding: 8px 16px; background: #6c63ff; color: white; text-decoration: none; border-radius: 6px;">
+       ← Back to Dashboard
+    </a>
+</div><h1>Redeem Voucher</h1> <p class="sub">Enter voucher code to redeem</p> <form id="redeemForm" autocomplete="off"> <div class="field"> 
+    <label for="code">Voucher Code</label>
+     <input id="code" name="code" placeholder="e.g., 7K9QUI" required />
+     <label for="Redeembill">Redeemed Bill Ref</label>
+     <input id="Redeembill" name="Redeembill" required  />
+    </div> 
+    <div class="actions"> <button class="btn" type="reset">Reset</button> <button class="btn primary" type="submit">Redeem</button> </div> <div id="result" class="result"></div> </form> </div> <script> 
+        const form=document.getElementById('redeemForm'); 
+        const result=document.getElementById('result'); 
+        form.addEventListener('submit',async e=>{ e.preventDefault();
+         const code=document.getElementById('code').value.trim(); 
+         const redeemBill=document.getElementById('Redeembill').value.trim(); 
+         if(!code){
+             result.style.display='block'; 
+             result.innerHTML="<span class='error'>Enter a voucher code.</span>"; return; 
+            } 
+            try{
+                 const fd=new FormData(); fd.append('code',code);fd.append('Redeembill',redeemBill);
+                 const res=await fetch('/redeem',{method:'POST',body:fd});
+                 const data=await res.json(); result.style.display='block';
+                 if(data.status==='success')
+                 {
+                    result.textContent=`Voucher Redeemed ✅\nCode: ${data.code}\n${data.message}`; }
+                    else{ result.innerHTML=`<span class='error'>❌ ${data.message}</span>`; }
+                 }catch(err){ result.style.display='block'; result.innerHTML="<span class='error'>❌ Server error. Try again.</span>"; } }); </script> </body> </html>

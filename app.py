@@ -27,8 +27,8 @@ def get_user_from_sheet(username):
 
 def generate_code(prefix="NAT"):
     ym = datetime.datetime.now().strftime("%y%m")
-    rand = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    return f"{prefix}-{ym}-{rand}"
+    rand = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return f"{rand}"
 from functools import wraps
 
 def login_required(f):
@@ -57,13 +57,13 @@ def issue():
         outlet = request.form.get('outlet')
         bill = request.form.get('bill')
 
-        if not name or not mobile or not outlet:
+        if not name  or not outlet:
             return jsonify({"status": "error", "message": "Missing fields"})
 
         code = generate_code(outlet.split('-')[0])
         created_at = datetime.datetime.now().isoformat()
 
-        SHEET.append_row([name, mobile, outlet, code, created_at, "No", "",bill])
+        SHEET.append_row([name, mobile, outlet, code, created_at, "No", "",bill,"",session["username"],""])
 
         return jsonify({
             "status": "success",
@@ -86,6 +86,7 @@ def redeem():
         return render_template("redeem_voucher_basic_html.html")
 
     code = request.form.get("code", "").strip().upper()
+    RedeemBill = request.form.get("Redeembill", "").strip()
     if not code:
         return jsonify({"status": "error", "message": "No code provided"})
 
@@ -102,6 +103,8 @@ def redeem():
             try:
                 SHEET.update([["Yes"]],f"F{i}")
                 SHEET.update([[datetime.datetime.now().isoformat()]],f"G{i}" )
+                SHEET.update([[RedeemBill]],f"I{i}" )
+                SHEET.update([[session["username"]]],f"K{i}" )
                 
                 return jsonify({"status": "success", "code":code,"message": "Voucher redeemed successfully."})
             except Exception as e:
