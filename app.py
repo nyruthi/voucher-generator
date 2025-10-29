@@ -10,13 +10,13 @@ SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis
 cred_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "service_account.json")
 CREDS = Credentials.from_service_account_file(cred_path, scopes=SCOPE)
 CLIENT = gspread.authorize(CREDS)
-SHEET = CLIENT.open_by_key("1V0daaI3OgxJJ5lifrGeYbTH3qrG1AO_LX0Q6J7JR5C4").sheet1
+SHEET = CLIENT.open_by_key("1cEEySXA_F6Nt1kq9oUgjnmlJAxhm0qg_5Tp-CRrZijU").sheet1
 app.secret_key = "super_secret_key"  # change this to a random string
 
 def get_user_from_sheet(username):
     """Fetch user record from Users sheet."""
     try:
-        users_sheet = CLIENT.open_by_key("1V0daaI3OgxJJ5lifrGeYbTH3qrG1AO_LX0Q6J7JR5C4").worksheet("Users")
+        users_sheet = CLIENT.open_by_key("1cEEySXA_F6Nt1kq9oUgjnmlJAxhm0qg_5Tp-CRrZijU").worksheet("Users")
         records = users_sheet.get_all_records()
         for user in records:
             if user["Username"].strip().lower() == username.strip().lower():
