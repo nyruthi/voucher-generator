@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import gspread, datetime, random, string, os
 app = Flask(__name__, template_folder='templates')
+import time
 
 # Google Sheets setup
 from google.oauth2.service_account import Credentials
@@ -56,15 +57,24 @@ def issue():
         mobile = request.form.get('mobile')
         outlet = request.form.get('outlet')
         bill = request.form.get('bill')
-
+        print(f"⚠️ bill number: {bill}")
         if not name  or not outlet:
             return jsonify({"status": "error", "message": "Missing fields"})
 
         code = generate_code(outlet.split('-')[0])
         created_at = datetime.datetime.now().isoformat()
+        # time.sleep(1)
 
-        SHEET.append_row([name, mobile, outlet, code, created_at, "No", "",bill,"",session["username"],""])
+        records = SHEET.get_all_records()
+        print(f"Headers seen: {records[0].keys()}")
+        existing_bills = [r["Issued Bill Number"] for r in records]
+        print(f"existing_bills: {existing_bills}")
 
+        if bill in existing_bills:
+            print(f"⚠️ Duplicate voucher detected for bill: {bill}")
+        else:
+            SHEET.append_row([name, mobile, outlet, code, created_at, "No", "",bill,"",session["username"],""])
+        
         return jsonify({
             "status": "success",
             "code": code,
@@ -72,8 +82,12 @@ def issue():
             "mobile": mobile,
             "outlet": outlet,
             "bill": bill,
-            "redirect_url": f"/issued/{code}"
+            "redirect_url": f"/voucher_success/{code}"
         })
+
+        # ✅ Redirect instead of render_template
+        # return redirect(url_for("voucher_success", code=code))
+
 
     # If method == GET, render the form
     return render_template("issue_voucher_customer_form_basic_html.html", outlet=session["outlet"])
@@ -204,6 +218,12 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+@app.route("/voucher-success")
+@login_required
+def voucher_success():
+    code = request.args.get("code")
+    return render_template("voucher_issued.html", code=code)
 
 
 
