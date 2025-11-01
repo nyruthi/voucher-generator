@@ -55,7 +55,7 @@
 
   </div>
   <div class="actions">
-    <button type="submit" class="btn primary">Generate Voucher</button>
+    <button type="submit" class="btn primary" id="submitBtn">Generate Voucher</button>
   </div>
 </form>
 
@@ -65,9 +65,13 @@
   <script>
 const form = document.getElementById('issueForm');
 const resultBox = document.getElementById('result');
+const button = document.getElementById("submitBtn");
+
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  button.disabled = true;
+  button.innerText = "Processing...";
   const formData = new FormData(form);
   const payload = Object.fromEntries(formData.entries());
 
